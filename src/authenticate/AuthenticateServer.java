@@ -1,6 +1,8 @@
 package authenticate;
 
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -9,9 +11,6 @@ import org.apache.commons.logging.LogFactory;
 
 import persist.EntityManager;
 import persist.impl.EntityManagerImpl;
-import thread.base.ThreadCall;
-import thread.base.ThreadPool;
-import thread.impl.DefaultThreadPool;
 import authenticate.net.AuthenticateService;
 
 public class AuthenticateServer {
@@ -22,7 +21,7 @@ public class AuthenticateServer {
 	
 	private static XMLConfiguration configuration;
 	
-	private static ThreadPool threadPool;
+	private static ScheduledExecutorService scheduler;
 	
 	private static AuthenticateService service;
 	
@@ -30,9 +29,9 @@ public class AuthenticateServer {
 	
 	public static void main(String[] args0) {
 		log.info("AuthenticateServer load.");
-		threadPool = new DefaultThreadPool(5, 100);
+		scheduler = Executors.newScheduledThreadPool(3);
 		entityManager = new EntityManagerImpl();
-		threadPool.execute(new Loader());
+		scheduler.execute(new Loader());
 	}
 
 	public static EntityManager getEntityManager() {
@@ -47,7 +46,7 @@ public class AuthenticateServer {
 		return opcodes;
 	}
 	
-	private static class Loader implements ThreadCall {
+	private static class Loader implements Runnable {
 
 		@Override
 		public void run() {
@@ -67,12 +66,6 @@ public class AuthenticateServer {
 				log.error("Load fail", e);
 				System.exit(0);
 			}
-		}
-
-		@Override
-		public void callFinish() {
-			log.info("AuthenticateServer start finish.");
-			
 		}
 		
 	}
