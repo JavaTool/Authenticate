@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.launching.macosx.MacOSXType/Java SE 8"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ServerIO"/>
 	<classpathentry kind="lib" path="/ServerIO/lib/antlr-2.7.6.jar"/>
 	<classpathentry kind="lib" path="/ServerIO/lib/asm-3.1.jar"/>
 	<classpathentry kind="lib" path="/ServerIO/lib/c3p0-0.9.1.jar"/>
@@ -32,5 +31,7 @@
 	<classpathentry kind="lib" path="/ServerIO/lib/servlet-api-2.5-20081211.jar"/>
 	<classpathentry kind="lib" path="/ServerIO/lib/slf4j-api-1.6.0.jar"/>
 	<classpathentry kind="lib" path="/ServerIO/lib/slf4j-log4j12-1.6.1.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/DataPlatform"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/NetIO"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

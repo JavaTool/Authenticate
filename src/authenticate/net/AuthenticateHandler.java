@@ -1,6 +1,6 @@
 package authenticate.net;
 
-import io.DispatchPacket;
+import net.io.mina.DispatchPacket;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

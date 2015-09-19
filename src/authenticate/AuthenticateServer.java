@@ -9,15 +9,15 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import persist.EntityManager;
-import persist.impl.EntityManagerImpl;
 import authenticate.net.AuthenticateService;
+import dataplatform.persist.IEntityManager;
+import dataplatform.persist.impl.EntityManagerImpl;
 
 public class AuthenticateServer {
 	
 	private static final Log log = LogFactory.getLog(AuthenticateServer.class);
 	
-	private static EntityManager entityManager;
+	private static IEntityManager entityManager;
 	
 	private static XMLConfiguration configuration;
 	
@@ -30,11 +30,11 @@ public class AuthenticateServer {
 	public static void main(String[] args0) {
 		log.info("AuthenticateServer load.");
 		scheduler = Executors.newScheduledThreadPool(3);
-		entityManager = new EntityManagerImpl();
+		entityManager = new EntityManagerImpl(null);
 		scheduler.execute(new Loader());
 	}
 
-	public static EntityManager getEntityManager() {
+	public static IEntityManager getEntityManager() {
 		return entityManager;
 	}
 	

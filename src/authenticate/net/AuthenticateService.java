@@ -1,16 +1,16 @@
 package authenticate.net;
 
-import io.DispatchPacket;
-import io.DispatchUADecoder;
-import io.DispatchUAEncoder;
-import io.IOUtil;
-import io.Packet;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import net.io.mina.DispatchPacket;
+import net.io.mina.Packet;
+import net.io.mina.server.DispatchUADecoder;
+import net.io.mina.server.DispatchUAEncoder;
+import net.io.util.IOUtil;
 
 import org.apache.log4j.Logger;
 import org.apache.mina.common.IoSession;
@@ -18,9 +18,9 @@ import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.nio.SocketAcceptor;
 import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
 
-import persist.EntityManager;
 import authenticate.AuthenticateServer;
 import authenticate.AuthenticateServer.OpcodeInfo;
+import dataplatform.persist.IEntityManager;
 
 public class AuthenticateService {
 	
@@ -36,15 +36,15 @@ public class AuthenticateService {
 	
 	private Map<String, IoSession> sessions;
 	
-	private EntityManager entityManager;
+	private IEntityManager entityManager;
 	
-	private Map<String, AccountEx> accounts;
+	private Map<String, Account> accounts;
 	
 	private Map<Integer, OpcodeInfo> methods;
 	
 	public AuthenticateService(String address, int port) {
 		sessions = new ConcurrentHashMap<String, IoSession>();
-		accounts = new ConcurrentHashMap<String, AccountEx>();
+		accounts = new ConcurrentHashMap<String, Account>();
 		methods = new HashMap<Integer, OpcodeInfo>();
 		this.address = address;
 		this.port = port;
@@ -75,7 +75,7 @@ public class AuthenticateService {
 		String name = getServerName(session);
 		if (sessions.containsKey(name)) {
 			sessions.remove(name);
-			for (AccountEx account : accounts.values()) {
+			for (Account account : accounts.values()) {
 				if (account.getServerName().equals(name)) {
 					accounts.remove(account.getName());
 				}
@@ -99,7 +99,7 @@ public class AuthenticateService {
 		if (hasAccountName(name)) {
 			pt.put(IOUtil.FALSE);
 		} else { // OK
-			AccountEx account = new AccountEx();
+			Account account = new Account();
 			account.setName(name);
 			account.setPassword(password);
 			entityManager.createSync(account);
@@ -116,15 +116,15 @@ public class AuthenticateService {
 	public void accountLogin(IoSession session, Packet packet, int returnCode) {
 		int serial = packet.getInt();
 		String name = packet.getString(), password = packet.getString();
-		AccountEx account = findAccount(name, password);
+		Account account = findAccount(name, password);
 		Packet pt = new Packet(returnCode);
 		pt.putInt(serial);
 		if (account == null) {
 			pt.put(IOUtil.FALSE);
-			pt.put(AccountEx.LOGIN_ERROR_NULL);
+			pt.put(Account.LOGIN_ERROR_NULL);
 		} else if (accounts.containsKey(name)) {
 			pt.put(IOUtil.FALSE);
-			pt.put(AccountEx.LOGIN_ERROR_REPEAT);
+			pt.put(Account.LOGIN_ERROR_REPEAT);
 		} else {
 			account.setServerName(getServerName(session));
 			accounts.put(name, account);
@@ -141,7 +141,7 @@ public class AuthenticateService {
 	public void deleteAccount(IoSession session, Packet packet, int returnCode) {
 		int serial = packet.getInt();
 		String name = packet.getString(), password = packet.getString();
-		AccountEx account = findAccount(name, password);
+		Account account = findAccount(name, password);
 		Packet pt = new Packet(returnCode);
 		pt.putInt(serial);
 		if (account == null) {
@@ -159,7 +159,7 @@ public class AuthenticateService {
 		int serial = packet.getInt();
 		String name = packet.getString(), password = packet.getString();
 		int imoney = packet.getInt();
-		AccountEx account = findAccount(name, password);
+		Account account = findAccount(name, password);
 		Packet pt = new Packet(returnCode);
 		pt.putInt(serial);
 		if (account == null) {
@@ -182,7 +182,7 @@ public class AuthenticateService {
 	public void accountLogout(IoSession session, Packet packet, int returnCode) {
 		int serial = packet.getInt();
 		String name = packet.getString(), password = packet.getString();
-		AccountEx account = findOnlineAccount(name, password);
+		Account account = findOnlineAccount(name, password);
 		Packet pt = new Packet(returnCode);
 		pt.putInt(serial);
 		if (account == null) {
@@ -199,7 +199,7 @@ public class AuthenticateService {
 	public void changePassword(IoSession session, Packet packet, int returnCode) {
 		int serial = packet.getInt();
 		String name = packet.getString(), password = packet.getString(), newPassword = packet.getString();
-		AccountEx account = findOnlineAccount(name, password);
+		Account account = findOnlineAccount(name, password);
 		Packet pt = new Packet(returnCode);
 		pt.putInt(serial);
 		if (account == null) {
@@ -214,17 +214,17 @@ public class AuthenticateService {
 	}
 	
 	private boolean hasAccountName(String name) {
-		return accounts.containsKey(name) ? true : entityManager.count("select count(*) from AccountEx where name=?", name) > 0;
+		return accounts.containsKey(name) ? true : entityManager.count("select count(*) from Account where name=?", name) > 0;
 	}
 	
-	private AccountEx findOnlineAccount(String name, String password) {
-		AccountEx account = accounts.get(name);
+	private Account findOnlineAccount(String name, String password) {
+		Account account = accounts.get(name);
 		return account != null && account.getPassword().equals(password) ? account : null;
 	}
 	
-	private AccountEx findAccount(String name, String password) {
-		AccountEx account = findOnlineAccount(name, password);
-		return account == null ? entityManager.fetch(AccountEx.class, "from AccountEx where name=? and password=?", name, password) : account;
+	private Account findAccount(String name, String password) {
+		Account account = findOnlineAccount(name, password);
+		return account == null ? entityManager.fetch(Account.class, "from Account where name=? and password=?", name, password) : account;
 	}
 	
 	private static void send(IoSession session, Packet packet) {
