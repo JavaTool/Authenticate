@@ -6,8 +6,8 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import authenticate.net.AuthenticateService;
 import dataplatform.persist.IEntityManager;
@@ -15,7 +15,7 @@ import dataplatform.persist.impl.EntityManagerImpl;
 
 public class AuthenticateServer {
 	
-	private static final Log log = LogFactory.getLog(AuthenticateServer.class);
+	private static final Logger log = LoggerFactory.getLogger(AuthenticateServer.class);
 	
 	private static IEntityManager entityManager;
 	

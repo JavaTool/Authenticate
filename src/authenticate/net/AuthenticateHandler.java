@@ -2,14 +2,14 @@ package authenticate.net;
 
 import net.io.mina.DispatchPacket;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.IoHandlerAdapter;
 import org.apache.mina.common.IoSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AuthenticateHandler extends IoHandlerAdapter {
 	
-	private static final Log log = LogFactory.getLog(AuthenticateHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(AuthenticateHandler.class);
 	
 	private final AuthenticateService service;
 	

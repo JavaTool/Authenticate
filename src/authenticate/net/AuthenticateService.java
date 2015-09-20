@@ -12,11 +12,12 @@ import net.io.mina.server.DispatchUADecoder;
 import net.io.mina.server.DispatchUAEncoder;
 import net.io.util.IOUtil;
 
-import org.apache.log4j.Logger;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.nio.SocketAcceptor;
 import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import authenticate.AuthenticateServer;
 import authenticate.AuthenticateServer.OpcodeInfo;
@@ -24,7 +25,7 @@ import dataplatform.persist.IEntityManager;
 
 public class AuthenticateService {
 	
-	private static final Logger log = Logger.getLogger(AuthenticateService.class);
+	private static final Logger log = LoggerFactory.getLogger(AuthenticateService.class);
 	
 	private static final byte DISPATCH_PACKET_ID = -2;
 	

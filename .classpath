@@ -2,36 +2,22 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.launching.macosx.MacOSXType/Java SE 8"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/antlr-2.7.6.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/asm-3.1.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/c3p0-0.9.1.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/cglib-2.2.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/commons-beanutils-core-1.8.0.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/commons-codec-1.3.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/commons-collections-3.2.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/commons-configuration-1.6.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/commons-digester-1.8.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/commons-httpclient-3.1.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/commons-lang-2.4.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/commons-logging-1.1.1.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/commons-primitives-1.0.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/dom4j-1.6.1.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/ehcache-core-2.4.2.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/ejb3-persistence.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/hibernate3.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/jboss-common-core.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/jbosscache-core.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/je-3.3.75.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/jetty-6.1.19.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/jetty-util-6.1.19.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/jta.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/log4j-1.2.15.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/mina-core-1.1.7.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/mysql-connector-java-5.0.8-bin.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/servlet-api-2.5-20081211.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/slf4j-api-1.6.0.jar"/>
-	<classpathentry kind="lib" path="/ServerIO/lib/slf4j-log4j12-1.6.1.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/DataPlatform"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/NetIO"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/DataPlatform"/>
+	<classpathentry kind="lib" path="/NetIO/lib/commons-configuration-1.6.jar"/>
+	<classpathentry kind="lib" path="/NetIO/lib/mina-core-1.1.7.jar"/>
+	<classpathentry kind="lib" path="/NetIO/lib/netty-all-4.1.0.Beta1.jar"/>
+	<classpathentry kind="lib" path="/DataPlatform/lib/c3p0-0.9.1.jar"/>
+	<classpathentry kind="lib" path="/DataPlatform/lib/commons-pool2-2.4.1.jar"/>
+	<classpathentry kind="lib" path="/DataPlatform/lib/guava-14.0.jar" sourcepath="/guava"/>
+	<classpathentry kind="lib" path="/DataPlatform/lib/hibernate3.jar"/>
+	<classpathentry kind="lib" path="/DataPlatform/lib/jedis.jar"/>
+	<classpathentry kind="lib" path="/DataPlatform/lib/mysql-connector-java-5.0.8-bin.jar"/>
+	<classpathentry kind="lib" path="/DataPlatform/lib/protobuf-java-2.4.1.jar"/>
+	<classpathentry kind="lib" path="/NetIO/lib/commons-lang-2.4.jar"/>
+	<classpathentry kind="lib" path="/NetIO/lib/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="/NetIO/lib/log4j-1.2.15.jar"/>
+	<classpathentry kind="lib" path="/NetIO/lib/slf4j-api-1.6.0.jar"/>
+	<classpathentry kind="lib" path="/NetIO/lib/slf4j-log4j12-1.6.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
