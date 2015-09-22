@@ -24,7 +24,7 @@
 		<property name="hibernate.generate_statistics">true</property>
 		<property name="current_session_context_class">thread</property>
 		
-		<mapping resource="authenticate/net/Account.hbm.xml"/>
+		<mapping resource="authenticate/account/Account.hbm.xml"/>
 	</session-factory>
 
 </hibernate-configuration>

@@ -1,4 +1,4 @@
-package authenticate.net;
+package authenticate.account;
 
 import java.io.Serializable;
 

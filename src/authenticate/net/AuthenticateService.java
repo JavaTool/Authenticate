@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import authenticate.AuthenticateServer;
 import authenticate.AuthenticateServer.OpcodeInfo;
+import authenticate.account.Account;
 import dataplatform.persist.IEntityManager;
 
 public class AuthenticateService {
