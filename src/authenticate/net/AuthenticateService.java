@@ -8,7 +8,6 @@ import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 
 import authenticate.AuthenticateServer;
-import authenticate.AuthenticateServer.OpcodeInfo;
 import authenticate.account.Account;
 import cg.base.io.SimpleContentHandler;
 import cg.base.io.message.RequestAccountChangePassword;
@@ -40,8 +39,6 @@ public class AuthenticateService {
 	private final Map<String, Account> accounts;
 	
 	private final Map<String, String> accountSessions;
-	
-	private final Map<Integer, OpcodeInfo> methods;
 	
 	private final Map<String, ISender> senders;
 	
@@ -86,7 +83,6 @@ public class AuthenticateService {
 		senders = Maps.newConcurrentMap();
 		accounts = Maps.newConcurrentMap();
 		accountSessions = Maps.newConcurrentMap();
-		methods = Maps.newHashMap();
 		this.port = port;
 		pubsub = new SimplePubsub();
 		log = new CLog();
@@ -98,10 +94,8 @@ public class AuthenticateService {
 		
 		pubsub.subscribe(this);
 		entityManager = AuthenticateServer.getEntityManager();
-
-		for (OpcodeInfo opcode : AuthenticateServer.getOpcodes()) {
-			methods.put(opcode.opcode, opcode);
-		}
+		
+		log.info("Net bind.");
 	}
 	
 	@Subscribe
