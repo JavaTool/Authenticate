@@ -26,19 +26,9 @@
   </build>
   <dependencies>
     <dependency>
-		<groupId>dataPlatform</groupId>
-		<artifactId>DataPlatform</artifactId>
+		<groupId>cg.base</groupId>
+		<artifactId>CrossGateBase</artifactId>
 		<version>0.0.1</version>
-	</dependency>
-    <dependency>
-		<groupId>net</groupId>
-		<artifactId>NetIO</artifactId>
-		<version>0.0.1</version>
-	</dependency>
-	<dependency>
-		<groupId>com.google.protobuf</groupId>
-		<artifactId>protobuf-java</artifactId>
-		<version>2.6.1</version>
 	</dependency>
   </dependencies>
 </project>
