@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.slf4j.Logger;
@@ -54,11 +55,10 @@ public class AuthenticateServer {
 				configuration = new XMLConfiguration("data/config.xml");
 				SubnodeConfiguration sub = configuration.configurationAt("authencicate");
 				service = new AuthenticateService(sub.getString("address"), sub.getInt("port"));
-				@SuppressWarnings("unchecked")
-				List<SubnodeConfiguration> list = configuration.configurationsAt("opcodes.opcode");
+				List<HierarchicalConfiguration> list = configuration.configurationsAt("opcodes.opcode");
 				opcodes = new OpcodeInfo[list.size()];
 				for (int i = 0;i < list.size();i++) {
-					SubnodeConfiguration snc = list.get(i);
+					HierarchicalConfiguration snc = list.get(i);
 					opcodes[i] = new OpcodeInfo(snc.getInt("id"), snc.getInt("return"), snc.getString("method"));
 				}
 				service.bind();
