@@ -1,19 +1,21 @@
 package authenticate.net;
 
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.commons.logging.LogFactory;
 
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 
-import authenticate.AuthenticateServer;
 import authenticate.account.Account;
+import cg.base.event.EventDisconnect;
 import cg.base.io.SimpleContentHandler;
 import cg.base.io.message.RequestAccountChangePassword;
 import cg.base.io.message.RequestAccountLogin;
 import cg.base.io.message.RequestAccountLogout;
 import cg.base.io.message.RequestAccountRegister;
+import cg.base.io.message.RequestServerList;
 import cg.base.io.message.RequestServerRegister;
 import cg.base.io.message.RequestServerUnregister;
 import cg.base.io.message.ResponseAccountChangePassword;
@@ -85,17 +87,36 @@ public class AuthenticateService {
 		accountSessions = Maps.newConcurrentMap();
 		this.port = port;
 		pubsub = new SimplePubsub();
+		pubsub.subscribe(this);
 		log = new CLog();
 	}
 	
-	public void bind() throws Exception {
-		INetServer netServer = new NettyTcpServer(port, new SimpleContentHandler(pubsub), new SimpleContentFactory());
-		netServer.bind();
+	public void bind(IEntityManager entityManager, ScheduledExecutorService scheduler) throws Exception {
+		this.entityManager = entityManager;
 		
-		pubsub.subscribe(this);
-		entityManager = AuthenticateServer.getEntityManager();
+		INetServer netServer = new NettyTcpServer(port, new SimpleContentHandler(pubsub), new SimpleContentFactory());
+		scheduler.execute(new NetServerStart(netServer));;
 		
 		log.info("Net bind.");
+	}
+	
+	private class NetServerStart implements Runnable {
+		
+		private final INetServer netServer;
+		
+		public NetServerStart(INetServer netServer) {
+			this.netServer = netServer;
+		}
+
+		@Override
+		public void run() {
+			try {
+				netServer.bind();
+			} catch (Exception e) {
+				log.error(getClass().getName() + "::" + e.getMessage(), e);
+			}
+		}
+		
 	}
 	
 	@Subscribe
@@ -127,7 +148,11 @@ public class AuthenticateService {
 		String name = requestAccountRegister.getAccount(), password = requestAccountRegister.getPassword();
 		IMessage message = new ResponseAccountRegister();
 		if (hasAccountName(name)) {
-			message = new ResponseExecuteError();
+			ResponseExecuteError error = new ResponseExecuteError();
+			error.setErrorCode(0);
+			error.setMessage("account already register.");
+			error.setMessageId(requestAccountRegister.getMessageId());
+			message = error;
 		} else { // OK
 			Account account = new Account();
 			account.setName(name);
@@ -150,13 +175,22 @@ public class AuthenticateService {
 		Account account = findAccount(name, password);
 		IMessage message = new ResponseAccountRegister();
 		if (account == null) {
-			message = new ResponseExecuteError();
+			ResponseExecuteError error = new ResponseExecuteError();
+			error.setErrorCode(0);
+			error.setMessage("account is null");
+			error.setMessageId(requestAccountLogin.getMessageId());
+			message = error;
 		} else if (accounts.containsKey(name)) {
-			message = new ResponseExecuteError();
+			ResponseExecuteError error = new ResponseExecuteError();
+			error.setErrorCode(0);
+			error.setMessage("account already login");
+			error.setMessageId(requestAccountLogin.getMessageId());
+			message = error;
 		} else {
 			account.setServerName(getServerName(requestAccountLogin));
 			accounts.put(name, account);
 			accountSessions.put(requestAccountLogin.getSessionId(), name);
+			log.info(name + " login.");
 			
 			message = new ResponseAccountLogin();
 		}
@@ -211,13 +245,18 @@ public class AuthenticateService {
 //		int serial = packet.getInt();
 		String sessionId = requestAccountLogout.getSessionId();
 		String name = accountSessions.get(sessionId);
-		Account account = name == null ? null : accounts.get(name);
+		Account account = name == null ? null : accounts.remove(name);
 		IMessage message = new ResponseAccountRegister();
 		if (account == null) {
-			message = new ResponseExecuteError();
+			ResponseExecuteError error = new ResponseExecuteError();
+			error.setErrorCode(0);
+			error.setMessage("account is null");
+			error.setMessageId(requestAccountLogout.getMessageId());
+			message = error;
 		} else {
 			accountSessions.remove(sessionId);
 			accounts.remove(name);
+			log.info(name + " logout.");
 			
 			message = new ResponseAccountLogout();
 		}
@@ -231,7 +270,11 @@ public class AuthenticateService {
 		Account account = findOnlineAccount(name, password);
 		IMessage message = new ResponseAccountRegister();
 		if (account == null) {
-			message = new ResponseExecuteError();
+			ResponseExecuteError error = new ResponseExecuteError();
+			error.setErrorCode(0);
+			error.setMessage("account is null");
+			error.setMessageId(requestAccountChangePassword.getMessageId());
+			message = error;
 		} else {
 			account.setPassword(newPassword);
 			entityManager.updateSync(account);
@@ -239,6 +282,20 @@ public class AuthenticateService {
 			message = new ResponseAccountChangePassword();
 		}
 		SenderUtils.send(requestAccountChangePassword.getSender(), message, log);
+	}
+	
+	@Subscribe
+	public void eventDisconnect(EventDisconnect eventDisconnect) {
+		String name = accountSessions.remove(eventDisconnect.getSessionId());
+		if (name != null) {
+			accounts.remove(name);
+			log.info(name + " logout.");
+		}
+	}
+	
+	@Subscribe
+	public void requestServerList(RequestServerList requestServerList) {
+		
 	}
 	
 	private boolean hasAccountName(String name) {
