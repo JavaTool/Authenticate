@@ -11,12 +11,14 @@ import com.google.common.eventbus.Subscribe;
 import authenticate.account.Account;
 import cg.base.event.EventDisconnect;
 import cg.base.io.SimpleContentHandler;
+import cg.base.io.message.RequestAccountAuthenticate;
 import cg.base.io.message.RequestAccountChangePassword;
 import cg.base.io.message.RequestAccountLogin;
 import cg.base.io.message.RequestAccountLogout;
 import cg.base.io.message.RequestAccountRegister;
 import cg.base.io.message.RequestServerList;
 import cg.base.io.message.RequestServerRegister;
+import cg.base.io.message.RequestServerSelect;
 import cg.base.io.message.RequestServerUnregister;
 import cg.base.io.message.ResponseAccountChangePassword;
 import cg.base.io.message.ResponseAccountLogin;
@@ -24,6 +26,7 @@ import cg.base.io.message.ResponseAccountLogout;
 import cg.base.io.message.ResponseAccountRegister;
 import cg.base.io.message.ResponseExecuteError;
 import cg.base.io.message.ResponseServerList;
+import cg.base.io.message.ResponseServerSelect;
 import cg.base.io.message.VoServer;
 import cg.base.log.Log;
 import cg.base.util.SenderUtils;
@@ -93,7 +96,7 @@ public class AuthenticateService {
 	public void registerServer(RequestServerRegister requestServerRegister) {
 		String name = getServerName(requestServerRegister);
 		if (!senders.containsKey(name)) {
-			senders.put(name, new ServerInfo(name, requestServerRegister.getName(), requestServerRegister.getSender()));
+			senders.put(name, new ServerInfo(name, requestServerRegister.getName(), requestServerRegister.getSender().getIp().split(":")[0] + ":" + requestServerRegister.getPort(), requestServerRegister.getSender()));
 			log.info("registerServer : " + name);
 		}
 	}
@@ -277,9 +280,41 @@ public class AuthenticateService {
 				VoServer server = new VoServer();
 				server.setKey(serverInfo.getKey());
 				server.setName(serverInfo.getName());
+				server.setUrl("");
 				servers.add(server);
 			}
 			responseServerList.setServers(servers);
+			SenderUtils.send(requestServerList.getSender(), responseServerList, log);
+		}
+	}
+	
+	@Subscribe
+	public void requestServerSelect(RequestServerSelect requestServerSelect) {
+		String sessionId = requestServerSelect.getSessionId();
+		Account account = getAccount(sessionId);
+		if (account != null) {
+			String key = requestServerSelect.getKey();
+			if (senders.containsKey(key)) {
+				RequestAccountAuthenticate requestAccountAuthenticate = new RequestAccountAuthenticate();
+				requestAccountAuthenticate.setKey(sessionId);
+				requestAccountAuthenticate.setAccount(account.getName());
+				requestAccountAuthenticate.setAccountId(account.getId());
+				requestAccountAuthenticate.setImoney(account.getImoney());
+				requestAccountAuthenticate.setIp(requestServerSelect.getSender().getIp().split(":")[0]);
+				ServerInfo serverInfo = senders.get(key);
+				SenderUtils.send(serverInfo.getSender(), requestAccountAuthenticate, log);
+				
+				ResponseServerSelect responseServerSelect = new ResponseServerSelect();
+				responseServerSelect.setKey(sessionId);
+				responseServerSelect.setUrl(serverInfo.getUrl());
+				SenderUtils.send(requestServerSelect.getSender(), responseServerSelect, log);
+			} else {
+				ResponseExecuteError error = new ResponseExecuteError();
+				error.setErrorCode(0);
+				error.setMessage("server is null");
+				error.setMessageId(requestServerSelect.getMessageId());
+				SenderUtils.send(requestServerSelect.getSender(), error, log);
+			}
 		}
 	}
 	

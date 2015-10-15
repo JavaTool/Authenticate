@@ -8,11 +8,14 @@ class ServerInfo {
 	
 	private final String name;
 	
+	private final String url;
+	
 	private final ISender sender;
 	
-	public ServerInfo(String key, String name, ISender sender) {
+	public ServerInfo(String key, String name, String url, ISender sender) {
 		this.key = key;
 		this.name = name;
+		this.url = url;
 		this.sender = sender;
 	}
 
@@ -22,6 +25,10 @@ class ServerInfo {
 
 	public String getName() {
 		return name;
+	}
+
+	public String getUrl() {
+		return url;
 	}
 
 	public ISender getSender() {
