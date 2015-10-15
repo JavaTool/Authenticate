@@ -1,10 +1,10 @@
 package authenticate.net;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 
-import org.apache.commons.logging.LogFactory;
-
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 
@@ -23,12 +23,13 @@ import cg.base.io.message.ResponseAccountLogin;
 import cg.base.io.message.ResponseAccountLogout;
 import cg.base.io.message.ResponseAccountRegister;
 import cg.base.io.message.ResponseExecuteError;
+import cg.base.io.message.ResponseServerList;
+import cg.base.io.message.VoServer;
 import cg.base.log.Log;
 import cg.base.util.SenderUtils;
 import dataplatform.persist.IEntityManager;
 import dataplatform.pubsub.ISimplePubsub;
 import dataplatform.pubsub.impl.SimplePubsub;
-import net.dipatch.ISender;
 import net.io.IMessage;
 import net.io.INetServer;
 import net.io.SimpleContentFactory;
@@ -42,44 +43,13 @@ public class AuthenticateService {
 	
 	private final Map<String, String> accountSessions;
 	
-	private final Map<String, ISender> senders;
+	private final Map<String, ServerInfo> senders;
 	
 	private final ISimplePubsub pubsub;
 	
 	private final Log log;
 	
 	private IEntityManager entityManager;
-	
-	private static class CLog implements Log {
-		
-		private static org.apache.commons.logging.Log log = LogFactory.getLog(Log.class);
-
-		@Override
-		public void info(String info) {
-			log.info(info);
-		}
-
-		@Override
-		public void warning(String warning) {
-			log.warn(warning);
-		}
-
-		@Override
-		public void error(String error) {
-			log.error(error);
-		}
-
-		@Override
-		public void print(String head, String message) {
-			log.info("[" + head + "]" + message);
-		}
-
-		@Override
-		public void error(String error, Throwable t) {
-			log.error(error, t);
-		}
-		
-	}
 	
 	public AuthenticateService(String address, int port) {
 		senders = Maps.newConcurrentMap();
@@ -123,14 +93,17 @@ public class AuthenticateService {
 	public void registerServer(RequestServerRegister requestServerRegister) {
 		String name = getServerName(requestServerRegister);
 		if (!senders.containsKey(name)) {
-			senders.put(name, requestServerRegister.getSender());
+			senders.put(name, new ServerInfo(name, requestServerRegister.getName(), requestServerRegister.getSender()));
 			log.info("registerServer : " + name);
 		}
 	}
 
 	@Subscribe
 	public void unregisterServer(RequestServerUnregister requestServerUnregister) {
-		String name = getServerName(requestServerUnregister);
+		unregisterServer(getServerName(requestServerUnregister));
+	}
+	
+	private void unregisterServer(String name) {
 		if (senders.containsKey(name)) {
 			senders.remove(name);
 			for (Account account : accounts.values()) {
@@ -290,12 +263,24 @@ public class AuthenticateService {
 		if (name != null) {
 			accounts.remove(name);
 			log.info(name + " logout.");
+		} else {
+			unregisterServer(eventDisconnect.getAddress());
 		}
 	}
 	
 	@Subscribe
 	public void requestServerList(RequestServerList requestServerList) {
-		
+		if (getAccount(requestServerList.getSessionId()) != null) {
+			ResponseServerList responseServerList = new ResponseServerList();
+			List<VoServer> servers = Lists.newArrayListWithCapacity(senders.size());
+			for (ServerInfo serverInfo : senders.values()) {
+				VoServer server = new VoServer();
+				server.setKey(serverInfo.getKey());
+				server.setName(serverInfo.getName());
+				servers.add(server);
+			}
+			responseServerList.setServers(servers);
+		}
 	}
 	
 	private boolean hasAccountName(String name) {
@@ -310,6 +295,11 @@ public class AuthenticateService {
 	private Account findAccount(String name, String password) {
 		Account account = findOnlineAccount(name, password);
 		return account == null ? entityManager.fetch(Account.class, "from Account where name=? and password=?", name, password) : account;
+	}
+	
+	private Account getAccount(String sessionId) {
+		String name = accountSessions.get(sessionId);
+		return name == null ? null : accounts.get(name);
 	}
 
 }
