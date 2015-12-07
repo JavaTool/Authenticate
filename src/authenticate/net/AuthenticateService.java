@@ -137,7 +137,7 @@ public class AuthenticateService {
 
 			message = new ResponseAccountRegister();
 		}
-		SenderUtils.send(requestAccountRegister.getSender(), message, log);
+		SenderUtils.send(requestAccountRegister.getSender(), message);
 	}
 	
 	private String getServerName(IMessage message) {
@@ -170,7 +170,7 @@ public class AuthenticateService {
 			
 			message = new ResponseAccountLogin();
 		}
-		SenderUtils.send(requestAccountLogin.getSender(), message, log);
+		SenderUtils.send(requestAccountLogin.getSender(), message);
 	}
 
 //	@Subscribe
@@ -236,7 +236,7 @@ public class AuthenticateService {
 			
 			message = new ResponseAccountLogout();
 		}
-		SenderUtils.send(requestAccountLogout.getSender(), message, log);
+		SenderUtils.send(requestAccountLogout.getSender(), message);
 	}
 
 	@Subscribe
@@ -257,7 +257,7 @@ public class AuthenticateService {
 			
 			message = new ResponseAccountChangePassword();
 		}
-		SenderUtils.send(requestAccountChangePassword.getSender(), message, log);
+		SenderUtils.send(requestAccountChangePassword.getSender(), message);
 	}
 	
 	@Subscribe
@@ -284,7 +284,7 @@ public class AuthenticateService {
 				servers.add(server);
 			}
 			responseServerList.setServers(servers);
-			SenderUtils.send(requestServerList.getSender(), responseServerList, log);
+			SenderUtils.send(requestServerList.getSender(), responseServerList);
 		}
 	}
 	
@@ -302,18 +302,18 @@ public class AuthenticateService {
 				requestAccountAuthenticate.setImoney(account.getImoney());
 				requestAccountAuthenticate.setIp(requestServerSelect.getSender().getIp().split(":")[0]);
 				ServerInfo serverInfo = senders.get(key);
-				SenderUtils.send(serverInfo.getSender(), requestAccountAuthenticate, log);
+				SenderUtils.send(serverInfo.getSender(), requestAccountAuthenticate);
 				
 				ResponseServerSelect responseServerSelect = new ResponseServerSelect();
 				responseServerSelect.setKey(sessionId);
 				responseServerSelect.setUrl(serverInfo.getUrl());
-				SenderUtils.send(requestServerSelect.getSender(), responseServerSelect, log);
+				SenderUtils.send(requestServerSelect.getSender(), responseServerSelect);
 			} else {
 				ResponseExecuteError error = new ResponseExecuteError();
 				error.setErrorCode(0);
 				error.setMessage("server is null");
 				error.setMessageId(requestServerSelect.getMessageId());
-				SenderUtils.send(requestServerSelect.getSender(), error, log);
+				SenderUtils.send(requestServerSelect.getSender(), error);
 			}
 		}
 	}
