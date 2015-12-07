@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
@@ -28,7 +31,6 @@ import cg.base.io.message.ResponseExecuteError;
 import cg.base.io.message.ResponseServerList;
 import cg.base.io.message.ResponseServerSelect;
 import cg.base.io.message.VoServer;
-import cg.base.log.Log;
 import cg.base.util.SenderUtils;
 import dataplatform.persist.IEntityManager;
 import dataplatform.pubsub.ISimplePubsub;
@@ -40,6 +42,8 @@ import net.io.netty.server.NettyTcpServer;
 
 public class AuthenticateService {
 	
+	private static final Logger log = LoggerFactory.getLogger(AuthenticateService.class);
+	
 	private final int port;
 	
 	private final Map<String, Account> accounts;
@@ -50,8 +54,6 @@ public class AuthenticateService {
 	
 	private final ISimplePubsub pubsub;
 	
-	private final Log log;
-	
 	private IEntityManager entityManager;
 	
 	public AuthenticateService(String address, int port) {
@@ -61,7 +63,6 @@ public class AuthenticateService {
 		this.port = port;
 		pubsub = new SimplePubsub();
 		pubsub.subscribe(this);
-		log = new CLog();
 	}
 	
 	public void bind(IEntityManager entityManager, ScheduledExecutorService scheduler) throws Exception {
@@ -86,7 +87,7 @@ public class AuthenticateService {
 			try {
 				netServer.bind();
 			} catch (Exception e) {
-				log.error(getClass().getName() + "::" + e.getMessage(), e);
+				log.error("", e);
 			}
 		}
 		
@@ -97,7 +98,7 @@ public class AuthenticateService {
 		String name = getServerName(requestServerRegister);
 		if (!senders.containsKey(name)) {
 			senders.put(name, new ServerInfo(name, requestServerRegister.getName(), requestServerRegister.getSender().getIp().split(":")[0] + ":" + requestServerRegister.getPort(), requestServerRegister.getSender()));
-			log.info("registerServer : " + name);
+			log.info("registerServer : {}", name);
 		}
 	}
 
@@ -114,7 +115,7 @@ public class AuthenticateService {
 					accounts.remove(account.getName());
 				}
 			}
-			log.info("unregisterServer : " + name);
+			log.info("unregisterServer : {}", name);
 		}
 	}
 
@@ -166,7 +167,7 @@ public class AuthenticateService {
 			account.setServerName(getServerName(requestAccountLogin));
 			accounts.put(name, account);
 			accountSessions.put(requestAccountLogin.getSessionId(), name);
-			log.info(name + " login.");
+			log.info("{} login.", name);
 			
 			message = new ResponseAccountLogin();
 		}
@@ -232,7 +233,7 @@ public class AuthenticateService {
 		} else {
 			accountSessions.remove(sessionId);
 			accounts.remove(name);
-			log.info(name + " logout.");
+			log.info("{} logout.", name);
 			
 			message = new ResponseAccountLogout();
 		}
@@ -265,7 +266,7 @@ public class AuthenticateService {
 		String name = accountSessions.remove(eventDisconnect.getSessionId());
 		if (name != null) {
 			accounts.remove(name);
-			log.info(name + " logout.");
+			log.info("{} logout.", name);
 		} else {
 			unregisterServer(eventDisconnect.getAddress());
 		}
