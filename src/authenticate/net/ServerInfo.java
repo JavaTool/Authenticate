@@ -1,6 +1,6 @@
 package authenticate.net;
 
-import net.dipatch.ISender;
+import net.io.ISender;
 
 class ServerInfo {
 	

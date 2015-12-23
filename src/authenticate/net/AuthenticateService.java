@@ -35,9 +35,9 @@ import cg.base.util.SenderUtils;
 import dataplatform.persist.IEntityManager;
 import dataplatform.pubsub.ISimplePubsub;
 import dataplatform.pubsub.impl.SimplePubsub;
-import net.io.IMessage;
 import net.io.INetServer;
-import net.io.SimpleContentFactory;
+import net.io.content.SimpleContentFactory;
+import net.io.message.IMessage;
 import net.io.netty.server.NettyTcpServer;
 
 public class AuthenticateService {
