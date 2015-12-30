@@ -46,6 +46,8 @@ public class AuthenticateService {
 	
 	private final int port;
 	
+	private final String address;
+	
 	private final Map<String, Account> accounts;
 	
 	private final Map<String, String> accountSessions;
@@ -60,6 +62,7 @@ public class AuthenticateService {
 		senders = Maps.newConcurrentMap();
 		accounts = Maps.newConcurrentMap();
 		accountSessions = Maps.newConcurrentMap();
+		this.address = address;
 		this.port = port;
 		pubsub = new SimplePubsub();
 		pubsub.subscribe(this);
@@ -68,7 +71,7 @@ public class AuthenticateService {
 	public void bind(IEntityManager entityManager, ScheduledExecutorService scheduler) throws Exception {
 		this.entityManager = entityManager;
 		
-		INetServer netServer = new NettyTcpServer(port, new SimpleContentHandler(pubsub), new SimpleContentFactory());
+		INetServer netServer = new NettyTcpServer(address, port, new SimpleContentHandler(pubsub), new SimpleContentFactory());
 		scheduler.execute(new NetServerStart(netServer));;
 		
 		log.info("Net bind.");
