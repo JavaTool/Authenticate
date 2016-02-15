@@ -71,7 +71,7 @@ public class AuthenticateService {
 	public void bind(IEntityManager entityManager, ScheduledExecutorService scheduler) throws Exception {
 		this.entityManager = entityManager;
 		
-		INetServer netServer = new NettyTcpServer(address, port, new SimpleContentHandler(pubsub), new SimpleContentFactory());
+		INetServer netServer = new NettyTcpServer(address, port, new SimpleContentHandler(pubsub), new SimpleContentFactory(new DataAnthenticate()));
 		scheduler.execute(new NetServerStart(netServer));;
 		
 		log.info("Net bind.");
@@ -164,7 +164,6 @@ public class AuthenticateService {
 			ResponseExecuteError error = new ResponseExecuteError();
 			error.setErrorCode(0);
 			error.setMessage("account already login");
-			error.setMessageId(requestAccountLogin.getMessageId());
 			message = error;
 		} else {
 			account.setServerName(getServerName(requestAccountLogin));
