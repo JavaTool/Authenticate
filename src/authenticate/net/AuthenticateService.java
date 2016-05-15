@@ -35,8 +35,12 @@ import cg.base.util.SenderUtils;
 import dataplatform.persist.IEntityManager;
 import dataplatform.pubsub.ISimplePubsub;
 import dataplatform.pubsub.impl.SimplePubsub;
+import net.content.IContent;
+import net.content.IContentFactory;
 import net.content.SimpleContentFactory;
+import net.dipatch.IDispatchManager;
 import net.io.INetServer;
+import net.io.netty.server.INettyServerConfig;
 import net.io.netty.server.tcp.NettyTcpServer;
 import net.message.IMessage;
 
@@ -71,7 +75,83 @@ public class AuthenticateService {
 	public void bind(IEntityManager entityManager, ScheduledExecutorService scheduler) throws Exception {
 		this.entityManager = entityManager;
 		
-		INetServer netServer = new NettyTcpServer(address, port, new SimpleContentHandler(pubsub), new SimpleContentFactory(new DataAnthenticate()));
+//		INetServer netServer = new NettyTcpServer(address, port, new SimpleContentHandler(pubsub), new SimpleContentFactory(new DataAnthenticate()));
+		INetServer netServer = new NettyTcpServer(new INettyServerConfig() {
+			
+			@Override
+			public long getWriterIdleTime() {
+				return 60;
+			}
+			
+			@Override
+			public int getSoBacklog() {
+				return 100;
+			}
+			
+			@Override
+			public long getReaderIdleTime() {
+				return 60;
+			}
+			
+			@Override
+			public int getPort() {
+				return port;
+			}
+			
+			@Override
+			public int getParentThreadNum() {
+				return 0;
+			}
+			
+			@Override
+			public IContentFactory getNettyContentFactory() {
+				return new SimpleContentFactory(new DataAnthenticate());
+			}
+			
+			@Override
+			public String getIp() {
+				return address;
+			}
+			
+			@Override
+			public IDispatchManager getDispatchManager() {
+				return new IDispatchManager() {
+					
+					private SimpleContentHandler contentHandler = new SimpleContentHandler(pubsub);
+					
+					@Override
+					public void fireDispatch(IContent content) {
+						try {
+							contentHandler.handle(content);
+						} catch (Exception e) {
+							log.error("", e);
+						}
+					}
+					
+					@Override
+					public void addDispatch(IContent content) {
+						fireDispatch(content);
+					}
+					
+					@Override
+					public void disconnect(IContent content) {
+						contentHandler.disconnect(content.getSessionId(), content.getSender().getIp());
+					}
+					
+				};
+			}
+			
+			@Override
+			public int getChildThreadNum() {
+				return 0;
+			}
+			
+			@Override
+			public long getAllIdleTime() {
+				return 60;
+			}
+			
+		});
 		scheduler.execute(new NetServerStart(netServer));;
 		
 		log.info("Net bind.");
@@ -190,31 +270,6 @@ public class AuthenticateService {
 //			entityManager.deleteSync(account);
 //			
 //			pt.put(IOUtil.TRUE);
-//		}
-//		send(session, pt);
-//	}
-
-//	@Subscribe
-//	public void addImoney(IoSession session, Packet packet, int returnCode) {
-//		int serial = packet.getInt();
-//		String name = packet.getString(), password = packet.getString();
-//		int imoney = packet.getInt();
-//		Account account = findAccount(name, password);
-//		Packet pt = new Packet(returnCode);
-//		pt.putInt(serial);
-//		if (account == null) {
-//			pt.put(IOUtil.FALSE);
-//		} else {
-//			int result = account.getImoney() + imoney;
-//			if (result < 0) {
-//				pt.put(IOUtil.FALSE);
-//			} else {
-//				account.setImoney(result);
-//				entityManager.updateSync(account);
-//				
-//				pt.put(IOUtil.TRUE);
-//				pt.putInt(account.getImoney());
-//			}
 //		}
 //		send(session, pt);
 //	}
