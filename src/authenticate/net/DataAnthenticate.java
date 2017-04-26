@@ -2,7 +2,7 @@ package authenticate.net;
 
 import java.io.DataOutputStream;
 
-import net.io.anthenticate.IDataAnthenticate;
+import org.tool.server.anthenticate.IDataAnthenticate;
 
 class DataAnthenticate implements IDataAnthenticate<byte[], DataOutputStream> {
 	

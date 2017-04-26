@@ -6,6 +6,18 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tool.server.io.INetServer;
+import org.tool.server.io.dispatch.DispatchManager;
+import org.tool.server.io.dispatch.IContentFactory;
+import org.tool.server.io.dispatch.IDispatchManager;
+import org.tool.server.io.dispatch.SimpleContentFactory;
+import org.tool.server.io.netty.server.INettyServerConfig;
+import org.tool.server.io.netty.server.tcp.NettyTcpServer;
+import org.tool.server.io.proto.IMessageSender;
+import org.tool.server.io.proto.ProtoHandler;
+import org.tool.server.persist.IEntityManager;
+import org.tool.server.pubsub.IPubsub;
+import org.tool.server.pubsub.impl.EventBusPubsub;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -13,36 +25,14 @@ import com.google.common.eventbus.Subscribe;
 
 import authenticate.account.Account;
 import cg.base.event.EventDisconnect;
-import cg.base.io.SimpleContentHandler;
-import cg.base.io.message.RequestAccountAuthenticate;
-import cg.base.io.message.RequestAccountChangePassword;
-import cg.base.io.message.RequestAccountLogin;
-import cg.base.io.message.RequestAccountLogout;
-import cg.base.io.message.RequestAccountRegister;
-import cg.base.io.message.RequestServerList;
-import cg.base.io.message.RequestServerRegister;
-import cg.base.io.message.RequestServerSelect;
-import cg.base.io.message.RequestServerUnregister;
-import cg.base.io.message.ResponseAccountChangePassword;
-import cg.base.io.message.ResponseAccountLogin;
-import cg.base.io.message.ResponseAccountLogout;
-import cg.base.io.message.ResponseAccountRegister;
-import cg.base.io.message.ResponseExecuteError;
-import cg.base.io.message.ResponseServerList;
-import cg.base.io.message.ResponseServerSelect;
-import cg.base.io.message.VoServer;
-import cg.base.util.SenderUtils;
-import dataplatform.persist.IEntityManager;
-import dataplatform.pubsub.ISimplePubsub;
-import dataplatform.pubsub.impl.SimplePubsub;
-import net.io.INetServer;
-import net.io.dispatch.IContent;
-import net.io.dispatch.IContentFactory;
-import net.io.dispatch.IDispatchManager;
-import net.io.dispatch.SimpleContentFactory;
-import net.io.netty.server.INettyServerConfig;
-import net.io.netty.server.tcp.NettyTcpServer;
-import net.message.IMessage;
+import cg.base.io.MessageIdTransform;
+import cg.base.io.message.interfaces.IVoServer;
+import cg.base.io.message.proto.CsAccountAuthenticate;
+import cg.base.io.message.proto.ScExecuteError;
+import cg.base.io.message.proto.ScServerList;
+import cg.base.io.message.proto.ScServerSelect;
+import cg.base.io.message.proto.VoServer;
+import cg.base.io.proto.MessageIdProto.MessageId;
 
 public class AuthenticateService {
 	
@@ -58,7 +48,7 @@ public class AuthenticateService {
 	
 	private final Map<String, ServerInfo> senders;
 	
-	private final ISimplePubsub pubsub;
+	private final IPubsub<Object> pubsub;
 	
 	private IEntityManager entityManager;
 	
@@ -68,14 +58,12 @@ public class AuthenticateService {
 		accountSessions = Maps.newConcurrentMap();
 		this.address = address;
 		this.port = port;
-		pubsub = new SimplePubsub();
+		pubsub = new EventBusPubsub();
 		pubsub.subscribe(this);
 	}
 	
 	public void bind(IEntityManager entityManager, ScheduledExecutorService scheduler) throws Exception {
 		this.entityManager = entityManager;
-		
-//		INetServer netServer = new NettyTcpServer(address, port, new SimpleContentHandler(pubsub), new SimpleContentFactory(new DataAnthenticate()));
 		INetServer netServer = new NettyTcpServer(new INettyServerConfig() {
 			
 			@Override
@@ -105,7 +93,7 @@ public class AuthenticateService {
 			
 			@Override
 			public IContentFactory getNettyContentFactory() {
-				return new SimpleContentFactory(new DataAnthenticate());
+				return new SimpleContentFactory(null);
 			}
 			
 			@Override
@@ -115,30 +103,7 @@ public class AuthenticateService {
 			
 			@Override
 			public IDispatchManager getDispatchManager() {
-				return new IDispatchManager() {
-					
-					private SimpleContentHandler contentHandler = new SimpleContentHandler(pubsub);
-					
-					@Override
-					public void fireDispatch(IContent content) {
-						try {
-							contentHandler.handle(content);
-						} catch (Exception e) {
-							log.error("", e);
-						}
-					}
-					
-					@Override
-					public void addDispatch(IContent content) {
-						fireDispatch(content);
-					}
-					
-					@Override
-					public void disconnect(IContent content) {
-						contentHandler.disconnect(content.getSessionId(), content.getSender().getIp());
-					}
-					
-				};
+				return new DispatchManager(new ProtoHandler(new MessageIdTransform(), "noProcessorError"), 100, 1, Lists.newLinkedList());
 			}
 			
 			@Override
@@ -175,19 +140,13 @@ public class AuthenticateService {
 		}
 		
 	}
-	
-	@Subscribe
-	public void registerServer(RequestServerRegister requestServerRegister) {
-		String name = getServerName(requestServerRegister);
+
+	public void registerServer(String ip, String serverName, int port, IMessageSender sender) {
+		String name = ip;
 		if (!senders.containsKey(name)) {
-			senders.put(name, new ServerInfo(name, requestServerRegister.getName(), requestServerRegister.getSender().getIp().split(":")[0] + ":" + requestServerRegister.getPort(), requestServerRegister.getSender()));
+			senders.put(name, new ServerInfo(name, serverName, ip.split(":")[0] + ":" + port, sender));
 			log.info("registerServer : {}", name);
 		}
-	}
-
-	@Subscribe
-	public void unregisterServer(RequestServerUnregister requestServerUnregister) {
-		unregisterServer(getServerName(requestServerUnregister));
 	}
 	
 	private void unregisterServer(String name) {
@@ -202,58 +161,43 @@ public class AuthenticateService {
 		}
 	}
 
-	@Subscribe
-	public void registerAccount(RequestAccountRegister requestAccountRegister) {
-//		int serial = packet.getInt();
-		String name = requestAccountRegister.getAccount(), password = requestAccountRegister.getPassword();
-		IMessage message = new ResponseAccountRegister();
+	public void registerAccount(String name, String password, IMessageSender sender) {
 		if (hasAccountName(name)) {
-			ResponseExecuteError error = new ResponseExecuteError();
+			ScExecuteError error = new ScExecuteError();
 			error.setErrorCode(0);
 			error.setMessage("account already register.");
-			error.setMessageId(requestAccountRegister.getMessageId());
-			message = error;
+			error.setMessageId(MessageId.MI_CS_ACCOUNT_REGISTER_VALUE);
+			sender.send(error);
 		} else { // OK
 			Account account = new Account();
 			account.setName(name);
 			account.setPassword(password);
 			entityManager.createSync(account);
-
-			message = new ResponseAccountRegister();
+			sender.send(MessageId.MI_SC_ACCOUNT_REGISTER_VALUE);
 		}
-		SenderUtils.send(requestAccountRegister.getSender(), message);
-	}
-	
-	private String getServerName(IMessage message) {
-		return message.getSender().getIp();
 	}
 
-	@Subscribe
-	public void accountLogin(RequestAccountLogin requestAccountLogin) {
-//		int serial = packet.getInt();
-		String name = requestAccountLogin.getAccount(), password = requestAccountLogin.getPassword();
+	public void accountLogin(String name, String password, IMessageSender sender, String ip) {
 		Account account = findAccount(name, password);
-		IMessage message = new ResponseAccountRegister();
 		if (account == null) {
-			ResponseExecuteError error = new ResponseExecuteError();
+			ScExecuteError error = new ScExecuteError();
 			error.setErrorCode(0);
 			error.setMessage("account is null");
-			error.setMessageId(requestAccountLogin.getMessageId());
-			message = error;
+			error.setMessageId(MessageId.MI_CS_ACCOUNT_LOGIN_VALUE);
+			sender.send(error);
 		} else if (accounts.containsKey(name)) {
-			ResponseExecuteError error = new ResponseExecuteError();
+			ScExecuteError error = new ScExecuteError();
 			error.setErrorCode(0);
 			error.setMessage("account already login");
-			message = error;
+			error.setMessageId(MessageId.MI_CS_ACCOUNT_LOGIN_VALUE);
+			sender.send(error);
 		} else {
-			account.setServerName(getServerName(requestAccountLogin));
+			account.setServerName(ip);
 			accounts.put(name, account);
-			accountSessions.put(requestAccountLogin.getSessionId(), name);
+			accountSessions.put(sender.getSessionId(), name);
 			log.info("{} login.", name);
-			
-			message = new ResponseAccountLogin();
+			sender.send(MessageId.MI_SC_ACCOUNT_LOGIN_VALUE);
 		}
-		SenderUtils.send(requestAccountLogin.getSender(), message);
 	}
 
 //	@Subscribe
@@ -274,48 +218,39 @@ public class AuthenticateService {
 //		send(session, pt);
 //	}
 
-	@Subscribe
-	public void accountLogout(RequestAccountLogout requestAccountLogout) {
+	public void accountLogout(IMessageSender sender) {
 //		int serial = packet.getInt();
-		String sessionId = requestAccountLogout.getSessionId();
+		String sessionId = sender.getSessionId();
 		String name = accountSessions.get(sessionId);
 		Account account = name == null ? null : accounts.remove(name);
-		IMessage message = new ResponseAccountRegister();
 		if (account == null) {
-			ResponseExecuteError error = new ResponseExecuteError();
+			ScExecuteError error = new ScExecuteError();
 			error.setErrorCode(0);
 			error.setMessage("account is null");
-			error.setMessageId(requestAccountLogout.getMessageId());
-			message = error;
+			error.setMessageId(MessageId.MI_CS_ACCOUNT_LOGOUT_VALUE);
+			sender.send(error);
 		} else {
 			accountSessions.remove(sessionId);
 			accounts.remove(name);
 			log.info("{} logout.", name);
-			
-			message = new ResponseAccountLogout();
+			sender.send(MessageId.MI_SC_ACCOUNT_LOGOUT_VALUE);
 		}
-		SenderUtils.send(requestAccountLogout.getSender(), message);
 	}
 
-	@Subscribe
-	public void changePassword(RequestAccountChangePassword requestAccountChangePassword) {
+	public void changePassword(String name, String password, String newPassword, IMessageSender sender) {
 //		int serial = packet.getInt();
-		String name = requestAccountChangePassword.getAccount(), password = requestAccountChangePassword.getOldPassword(), newPassword = requestAccountChangePassword.getNewPassword();
 		Account account = findOnlineAccount(name, password);
-		IMessage message = new ResponseAccountRegister();
 		if (account == null) {
-			ResponseExecuteError error = new ResponseExecuteError();
+			ScExecuteError error = new ScExecuteError();
 			error.setErrorCode(0);
 			error.setMessage("account is null");
-			error.setMessageId(requestAccountChangePassword.getMessageId());
-			message = error;
+			error.setMessageId(MessageId.MI_CS_ACCOUNT_CHANGE_PASSWORD_VALUE);
+			sender.send(error);
 		} else {
 			account.setPassword(newPassword);
 			entityManager.updateSync(account);
-			
-			message = new ResponseAccountChangePassword();
+			sender.send(MessageId.MI_SC_ACCOUNT_CHANGE_PASSWORD_VALUE);
 		}
-		SenderUtils.send(requestAccountChangePassword.getSender(), message);
 	}
 	
 	@Subscribe
@@ -329,11 +264,10 @@ public class AuthenticateService {
 		}
 	}
 	
-	@Subscribe
-	public void requestServerList(RequestServerList requestServerList) {
-		if (getAccount(requestServerList.getSessionId()) != null) {
-			ResponseServerList responseServerList = new ResponseServerList();
-			List<VoServer> servers = Lists.newArrayListWithCapacity(senders.size());
+	public void requestServerList(IMessageSender sender) {
+		if (getAccount(sender.getSessionId()) != null) {
+			ScServerList responseServerList = new ScServerList();
+			List<IVoServer> servers = Lists.newArrayListWithCapacity(senders.size());
 			for (ServerInfo serverInfo : senders.values()) {
 				VoServer server = new VoServer();
 				server.setKey(serverInfo.getKey());
@@ -342,36 +276,34 @@ public class AuthenticateService {
 				servers.add(server);
 			}
 			responseServerList.setServers(servers);
-			SenderUtils.send(requestServerList.getSender(), responseServerList);
+			sender.send(responseServerList);
 		}
 	}
 	
-	@Subscribe
-	public void requestServerSelect(RequestServerSelect requestServerSelect) {
-		String sessionId = requestServerSelect.getSessionId();
+	public void requestServerSelect(String key, String ip, IMessageSender sender) {
+		String sessionId = sender.getSessionId();
 		Account account = getAccount(sessionId);
 		if (account != null) {
-			String key = requestServerSelect.getKey();
 			if (senders.containsKey(key)) {
-				RequestAccountAuthenticate requestAccountAuthenticate = new RequestAccountAuthenticate();
+				CsAccountAuthenticate requestAccountAuthenticate = new CsAccountAuthenticate();
 				requestAccountAuthenticate.setKey(sessionId);
 				requestAccountAuthenticate.setAccount(account.getName());
 				requestAccountAuthenticate.setAccountId(account.getId());
 				requestAccountAuthenticate.setImoney(account.getImoney());
-				requestAccountAuthenticate.setIp(requestServerSelect.getSender().getIp().split(":")[0]);
+				requestAccountAuthenticate.setIp(ip);
 				ServerInfo serverInfo = senders.get(key);
-				SenderUtils.send(serverInfo.getSender(), requestAccountAuthenticate);
+				serverInfo.getSender().send(requestAccountAuthenticate);
 				
-				ResponseServerSelect responseServerSelect = new ResponseServerSelect();
+				ScServerSelect responseServerSelect = new ScServerSelect();
 				responseServerSelect.setKey(sessionId);
 				responseServerSelect.setUrl(serverInfo.getUrl());
-				SenderUtils.send(requestServerSelect.getSender(), responseServerSelect);
+				sender.send(responseServerSelect);
 			} else {
-				ResponseExecuteError error = new ResponseExecuteError();
+				ScExecuteError error = new ScExecuteError();
 				error.setErrorCode(0);
 				error.setMessage("server is null");
-				error.setMessageId(requestServerSelect.getMessageId());
-				SenderUtils.send(requestServerSelect.getSender(), error);
+				error.setMessageId(MessageId.MI_CS_SERVER_SELECT_VALUE);
+				sender.send(error);
 			}
 		}
 	}

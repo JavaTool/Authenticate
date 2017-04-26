@@ -1,6 +1,6 @@
 package authenticate.net;
 
-import net.io.ISender;
+import org.tool.server.io.proto.IMessageSender;
 
 class ServerInfo {
 	
@@ -10,9 +10,9 @@ class ServerInfo {
 	
 	private final String url;
 	
-	private final ISender sender;
+	private final IMessageSender sender;
 	
-	public ServerInfo(String key, String name, String url, ISender sender) {
+	public ServerInfo(String key, String name, String url, IMessageSender sender) {
 		this.key = key;
 		this.name = name;
 		this.url = url;
@@ -31,7 +31,7 @@ class ServerInfo {
 		return url;
 	}
 
-	public ISender getSender() {
+	public IMessageSender getSender() {
 		return sender;
 	}
 
