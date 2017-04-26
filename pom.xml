@@ -26,8 +26,8 @@
   </build>
   <dependencies>
     <dependency>
-		<groupId>cg.base</groupId>
-		<artifactId>CrossGateBase</artifactId>
+		<groupId>org.tool</groupId>
+		<artifactId>ServerIO</artifactId>
 		<version>0.0.1</version>
 	</dependency>
   </dependencies>
