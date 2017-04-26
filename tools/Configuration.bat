@@ -1,0 +1,1 @@
+java -cp ".;lib/*" org.tool.classMaker.ClassMaker "D:\My_space\Authenticate\config\configuration.xml" "org.tool.classMaker.generator.java.GeneratorFactory" "org.tool.classMaker.input.reader.xml.DomReader:org.tool.classMaker.input.reader.xml.JavaBindClassCreator_A" "D:\My_space\Authenticate\src" "org.authenticate" "org.tool.classMaker.input.stream.FileStreamProvider:.xml:*" ""

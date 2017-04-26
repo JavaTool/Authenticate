@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<port>10001</port>
+	<resource>D:/My_space/Authenticate/WebContent/data/</resource>
+	<hibernate>D:/My_space/Authenticate/hibernate_config/hibernate.cfg.xml</hibernate>
+</configuration>
