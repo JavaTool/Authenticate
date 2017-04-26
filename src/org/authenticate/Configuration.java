@@ -39,6 +39,16 @@ public class Configuration implements IConfigurationHolder {
 	/**
 	 * Generate by classMaker.
 	 */
+	public static final String REDIS_ADDRESS = "redis_address";
+
+	/**
+	 * Generate by classMaker.
+	 */
+	public static final String EXPIRE = "expire";
+
+	/**
+	 * Generate by classMaker.
+	 */
 	public String getConfigurationValue(String key) {
 		return elements.get(key);
 	}
@@ -82,6 +92,22 @@ public class Configuration implements IConfigurationHolder {
 	@XmlElement
 	private void setHibernate(String value) {
 		elements.put(HIBERNATE, value);
+	}
+
+	/**
+	 * Generate by classMaker.
+	 */
+	@XmlElement
+	private void setRedis_address(String value) {
+		elements.put(REDIS_ADDRESS, value);
+	}
+
+	/**
+	 * Generate by classMaker.
+	 */
+	@XmlElement
+	private void setExpire(String value) {
+		elements.put(EXPIRE, value);
 	}
 
 }

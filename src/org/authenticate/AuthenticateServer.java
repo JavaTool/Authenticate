@@ -23,8 +23,7 @@ final class AuthenticateServer implements IJettyConfig {
 
 	@Override
 	public void init() {
-		// TODO Auto-generated method stub
-
+		port = Integer.parseInt(SingleConfiguration.getInstance().getConfigurationValue(Configuration.PORT));
 	}
 
 	@Override

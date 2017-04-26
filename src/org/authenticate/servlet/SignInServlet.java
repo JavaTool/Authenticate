@@ -1,0 +1,29 @@
+package org.authenticate.servlet;
+
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.authenticate.IAccountService;
+import org.tool.server.account.Account;
+import org.tool.server.io.http.server.BaseServlet;
+
+import com.alibaba.fastjson.JSONObject;
+
+public final class SignInServlet extends BaseServlet {
+
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		work(req, resp, (q, p, j) -> {
+			Account account = JSONObject.parseObject(readJson(q).toJSONString(), Account.class);
+			((IAccountService) q.getServletContext().getAttribute(IAccountService.class.getName())).signIn(account);
+			writeOK(j);
+			return EMPTY_LIST;
+		});
+	}
+
+}
