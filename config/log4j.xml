@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+	<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+		<param name="Target" value="System.out" />
+		<param name="Threshold" value="DEBUG" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%5p] %d %t (%c{2}) - %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="WORK_LOG" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="File" value="logs/work.log" />
+		<param name="Append" value="true" />
+		<param name="Encoding" value="UTF-8" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%5p] %d %t (%c{2}) - %m%n" />
+		</layout>
+	</appender>
+	
+	<appender name="ERROR_LOG" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="File" value="logs/error.log" />
+		<param name="Append" value="true" />
+		<param name="Encoding" value="UTF-8" />
+		<param name="Threshold" value="ERROR"/>
+		<param name="DatePattern" value="'.'yyyy-MM-dd" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[%5p] %d %t (%c{2}) - %m%n" />
+		</layout>
+	</appender>
+	
+	<appender name="ERROR_REMOTE_LOG" class="org.apache.log4j.net.SocketAppender">
+		<param name='remoteHost' value='123.206.52.213' />
+		<param name='port' value='4560' />
+		<param name='Threshold' value='ERROR' />
+		<param name='ReconnectionDelay' value='1000' />
+		<param name='LocationInfo' value='true' />
+	</appender>
+	
+	<root>
+		<level value="info" />
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="WORK_LOG" />
+		<appender-ref ref="ERROR_LOG" />
+		<appender-ref ref="ERROR_REMOTE_LOG" />
+	</root>
+</log4j:configuration>  
