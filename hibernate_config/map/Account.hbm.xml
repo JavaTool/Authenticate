@@ -10,7 +10,5 @@
         </id>
         <property name="name" type="string"/>
         <property name="password" type="string"/>
-        <property name="imoney" type="int"/>
     </class>
-	
 </hibernate-mapping>
