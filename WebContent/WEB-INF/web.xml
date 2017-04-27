@@ -5,4 +5,36 @@
     <listener-class>org.authenticate.Startup</listener-class>
   </listener>
   
+  <servlet>
+    <servlet-name>Authenticate</servlet-name>
+    <servlet-class>org.authenticate.servlet.AuthenticateServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>Authenticate</servlet-name>
+    <url-pattern>/Authenticate</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <servlet-name>ChangePassword</servlet-name>
+    <servlet-class>org.authenticate.servlet.ChangePasswordServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ChangePassword</servlet-name>
+    <url-pattern>/ChangePassword</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <servlet-name>SignIn</servlet-name>
+    <servlet-class>org.authenticate.servlet.SignInServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>SignIn</servlet-name>
+    <url-pattern>/SignIn</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <servlet-name>SignUp</servlet-name>
+    <servlet-class>org.authenticate.servlet.SignUpServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>SignUp</servlet-name>
+    <url-pattern>/SignUp</url-pattern>
+  </servlet-mapping>
 </web-app>

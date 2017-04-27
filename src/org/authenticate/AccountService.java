@@ -77,7 +77,7 @@ final class AccountService implements IAccountService {
 
 	@Override
 	public void change(Account account) {
-		checkNotNull(entityManager.fetch(Account.class, FETCH_ACCOUNT_BY_NAME, account.getName()), ERROR_ACCOUNT_NAME);
+		checkArgument(authenticate(account), ERROR_ACCOUNT_NAME);
 		entityManager.updateSync(account);
 	}
 

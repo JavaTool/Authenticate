@@ -10,5 +10,6 @@
         </id>
         <property name="name" type="string"/>
         <property name="password" type="string"/>
+        <property name="currency" type="int"/>
     </class>
 </hibernate-mapping>
