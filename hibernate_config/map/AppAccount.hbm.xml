@@ -4,12 +4,10 @@
         "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping package="org.tool.server.account">
-    <class name="Account" table="account">
-        <id name="id">
+    <class name="Account" table="Appaccount">
+        <id name="accountId">
             <generator class="native"/>
         </id>
-        <property name="name" type="string"/>
-        <property name="password" type="string"/>
-        <property name="currency" type="int"/>
+        <property name="openId" type="string"/>
     </class>
 </hibernate-mapping>

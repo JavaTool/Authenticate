@@ -5,6 +5,10 @@ import java.io.File;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
+import org.authenticate.account.AccountService;
+import org.authenticate.account.IAccountService;
+import org.authenticate.app.AppService;
+import org.authenticate.app.IAppService;
 import org.tool.server.cache.ICache;
 import org.tool.server.cache.redis.JedisPoolResources;
 import org.tool.server.cache.redis.string.RedisStringPoolCache;
@@ -31,8 +35,11 @@ public class Startup extends AbstractStartup {
 		ICache<String, String, String> cache = new RedisStringPoolCache(new JedisPoolResources(address, 10, 10, 1000, ""));
 		// service
 		int expire = Integer.parseInt(configuration.getConfigurationValue(Configuration.EXPIRE));
-		IAccountService accountService = new AccountService(entityManager, cache, expire);
+		AccountService accountService = new AccountService(entityManager, cache, expire);
 		servletContext.setAttribute(IAccountService.class.getName(), accountService);
+		IAppService appService = new AppService(entityManager);
+		accountService.setAppService(appService);
+		servletContext.setAttribute(IAppService.class.getName(), appService);
 		log.info("channel server startup.");
 	}
 

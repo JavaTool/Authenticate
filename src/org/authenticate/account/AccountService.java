@@ -1,4 +1,4 @@
-package org.authenticate;
+package org.authenticate.account;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -6,18 +6,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.authenticate.app.IAppService;
 import org.tool.server.account.Account;
 import org.tool.server.cache.ICache;
 import org.tool.server.cache.ICacheHash;
 import org.tool.server.persist.IEntityManager;
 
-final class AccountService implements IAccountService {
+public final class AccountService implements IAccountService {
 	
 	private static final String ERROR_ACCOUNT_NAME = "1";
 	
 	private static final String ERROR_ACCOUNT_PASSWORD = "2";
 	
 	private static final String ERROR_ACCOUNT_EXISTS = "3";
+	
+	private static final String ERROR_NOT_SIGN_UP = "1";
 	
 	private static final String FROM = "from Account";
 	
@@ -35,6 +38,8 @@ final class AccountService implements IAccountService {
 	
 	private final int expire;
 	
+	private IAppService appService;
+	
 	public AccountService(IEntityManager entityManager, ICache<String, String, String> cache, int expire) {
 		this.entityManager = entityManager;
 		this.cache = cache;
@@ -43,9 +48,9 @@ final class AccountService implements IAccountService {
 
 	@Override
 	public String signIn(Account account) {
-		Account existsAccount = checkNotNull(entityManager.fetch(Account.class, FETCH_ACCOUNT_BY_NAME, account.getName()), ERROR_ACCOUNT_NAME);
-		checkArgument(existsAccount.getPassword().equals(account.getPassword()), ERROR_ACCOUNT_PASSWORD);
-		return cacheAccount(existsAccount);
+		checkArgument(entityManager.fetch(Account.class, FETCH_ACCOUNT_BY_NAME, account.getName()) != null, ERROR_ACCOUNT_EXISTS);
+		entityManager.createSync(account);
+		return cacheAccount(account);
 	}
 	
 	private static String generateKey() {
@@ -64,10 +69,18 @@ final class AccountService implements IAccountService {
 	}
 
 	@Override
-	public String signUp(Account account) {
-		checkArgument(entityManager.fetch(Account.class, FETCH_ACCOUNT_BY_NAME, account.getName()) != null, ERROR_ACCOUNT_EXISTS);
-		entityManager.createSync(account);
-		return cacheAccount(account);
+	public Account signUp(Account account) {
+		Account existsAccount = checkNotNull(entityManager.fetch(Account.class, FETCH_ACCOUNT_BY_NAME, account.getName()), ERROR_ACCOUNT_NAME);
+		checkArgument(existsAccount.getPassword().equals(account.getPassword()), ERROR_ACCOUNT_PASSWORD);
+		account.setId(existsAccount.getId());
+		String appId = account.getAppId();
+		String appKey = account.getAppKey();
+		if (appId != null && appId.length() > 0 && appKey != null && appKey.length() > 0) {
+			String openId = appService.authorize(appId, appKey, account.getId());
+			account.setOpenId(openId);
+		}
+		account.setLoginKey(cacheAccount(account));
+		return account;
 	}
 
 	@Override
@@ -77,7 +90,7 @@ final class AccountService implements IAccountService {
 
 	@Override
 	public void change(Account account) {
-		checkArgument(authenticate(account), ERROR_ACCOUNT_NAME);
+		checkArgument(authenticate(account), ERROR_NOT_SIGN_UP);
 		entityManager.updateSync(account);
 	}
 
@@ -89,6 +102,18 @@ final class AccountService implements IAccountService {
 			cache.key().delete(name);
 		}
 		return ret;
+	}
+
+	public void setAppService(IAppService appService) {
+		this.appService = appService;
+	}
+
+	@Override
+	public Account authorizeApp(Account account) {
+		checkArgument(authenticate(account), ERROR_NOT_SIGN_UP);
+		String openId = appService.authorize(account.getAppId(), account.getAppKey(), account.getId());
+		account.setOpenId(openId);
+		return account;
 	}
 
 }

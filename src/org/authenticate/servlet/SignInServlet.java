@@ -6,7 +6,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.authenticate.IAccountService;
+import org.authenticate.account.IAccountService;
 import org.tool.server.account.Account;
 import org.tool.server.io.http.server.BaseServlet;
 
