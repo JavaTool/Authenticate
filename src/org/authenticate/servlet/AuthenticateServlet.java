@@ -18,9 +18,9 @@ public final class AuthenticateServlet extends BaseServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		work(req, resp, (q, p, j) -> {
 			Account account = readJson(q, Account.class);
-			int accountId = ((IAccountService) q.getServletContext().getAttribute(IAccountService.class.getName())).authenticate(account);
-			if (accountId > -1) {
-				writeOK(j, String.valueOf(accountId));
+			boolean ret = ((IAccountService) q.getServletContext().getAttribute(IAccountService.class.getName())).authenticate(account);
+			if (ret) {
+				writeOK(j);
 			} else {
 				writeError(j, "authenticate failed.");
 			}
