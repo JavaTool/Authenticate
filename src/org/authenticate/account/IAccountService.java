@@ -12,7 +12,7 @@ public interface IAccountService {
 	
 	void change(Account account);
 	
-	boolean authenticate(Account account);
+	int authenticate(Account account);
 	
 	Account authorizeApp(Account account);
 

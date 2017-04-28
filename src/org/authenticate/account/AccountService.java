@@ -90,18 +90,19 @@ public final class AccountService implements IAccountService {
 
 	@Override
 	public void change(Account account) {
-		checkArgument(authenticate(account), ERROR_NOT_SIGN_UP);
+		checkArgument(authenticate(account) > -1, ERROR_NOT_SIGN_UP);
 		entityManager.updateSync(account);
 	}
 
 	@Override
-	public boolean authenticate(Account account) {
+	public int authenticate(Account account) {
 		String name = account.getName();
 		boolean ret = account.getLoginKey().equals(cache.hash().get(name, FIELD_KEY));
+		int accountId = Integer.parseInt(cache.hash().get(name, FIELD_ID));
 		if (ret) {
 			cache.key().delete(name);
 		}
-		return ret;
+		return accountId;
 	}
 
 	public void setAppService(IAppService appService) {
@@ -110,7 +111,7 @@ public final class AccountService implements IAccountService {
 
 	@Override
 	public Account authorizeApp(Account account) {
-		checkArgument(authenticate(account), ERROR_NOT_SIGN_UP);
+		checkArgument(authenticate(account) > -1, ERROR_NOT_SIGN_UP);
 		String openId = appService.authorize(account.getAppId(), account.getAppKey(), account.getId());
 		account.setOpenId(openId);
 		return account;
