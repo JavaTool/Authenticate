@@ -9,6 +9,8 @@ public final class App {
 	private String appName;
 	
 	private String appTable;
+	
+	private String appEntry;
 
 	public String getAppId() {
 		return appId;
@@ -40,6 +42,14 @@ public final class App {
 
 	public void setAppTable(String appTable) {
 		this.appTable = appTable;
+	}
+
+	public String getAppEntry() {
+		return appEntry;
+	}
+
+	public void setAppEntry(String appEntry) {
+		this.appEntry = appEntry;
 	}
 
 }

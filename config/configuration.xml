@@ -3,6 +3,6 @@
 	<port>10001</port>
 	<resource>D:/My_space/Authenticate/WebContent/data/</resource>
 	<hibernate>D:/My_space/Authenticate/hibernate_config/hibernate.cfg.xml</hibernate>
-	<redis_address>127.0.0.1:6379</redis_address>
+	<redis_address>127.0.0.1:11001</redis_address>
 	<expire>600000</expire>
 </configuration>

@@ -3,10 +3,10 @@
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.tool.server.account">
-    <class name="Account" table="Appaccount">
+<hibernate-mapping package="org.authenticate.app.entry">
+    <class name="CrossGate" table="tb_crossgate">
         <id name="accountId">
-            <generator class="native"/>
+            <generator class="assigned"/>
         </id>
         <property name="openId" type="string"/>
     </class>

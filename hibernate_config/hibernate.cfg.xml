@@ -5,9 +5,9 @@
 <hibernate-configuration>
 	<session-factory>
 		<property name="connection.username">root</property>
-		<property name="connection.url">jdbc:mysql://localhost/authenticate?useUnicode=true&amp;characterEncoding=UTF-8</property>
+		<property name="connection.url">jdbc:mysql://127.0.0.1:3306/authenticate?useUnicode=true&amp;characterEncoding=UTF-8</property>
 		<property name="dialect">org.hibernate.dialect.MySQLDialect</property>
-		<property name="connection.password">fanxing2016</property>
+		<property name="connection.password">root</property>
 		<property name="connection.driver_class">com.mysql.jdbc.Driver</property>
 		<property name="hibernate.connection.provider_class">org.hibernate.connection.C3P0ConnectionProvider</property>
 		<property name="hibernate.c3p0.max_size">5</property>
@@ -23,5 +23,7 @@
 		<property name="hibernate.session.events.log">false</property>
 
 		<mapping file="hibernate_config/map/Account.hbm.xml"/>
+		<mapping file="hibernate_config/map/App.hbm.xml"/>
+		<mapping file="hibernate_config/map/CrossGate.hbm.xml"/>
 	</session-factory>
 </hibernate-configuration>

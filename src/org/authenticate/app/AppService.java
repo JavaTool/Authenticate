@@ -32,7 +32,7 @@ public final class AppService implements IAppService {
 		String openId = getOpenId(app, accountId);
 		if (openId == null) {
 			openId = UUID.randomUUID().toString();
-			entityManager.nativeSQLUpate("insert into " + app.getAppTable() + " set accountId=?0, openId=?1", openId);
+			entityManager.nativeSQLUpate("insert into " + app.getAppTable() + " set accountId=?0, openId=?1", accountId, openId);
 			return openId;
 		} else {
 			return openId;
@@ -61,7 +61,7 @@ public final class AppService implements IAppService {
 
 	private String getOpenId(App app, int accountId) {
 		@SuppressWarnings("rawtypes")
-		List list = entityManager.nativeQuery("select openId from " + app.getAppTable() + " where accountId=?0", accountId);
+		List list = entityManager.nativeQuery("select openId from " + app.getAppEntry() + " where accountId=?0", accountId);
 		return list.size() > 0 ? list.get(0).toString() : null;
 	}
 
