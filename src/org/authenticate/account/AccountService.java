@@ -7,6 +7,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.authenticate.app.IAppService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tool.server.account.Account;
 import org.tool.server.cache.ICache;
 import org.tool.server.cache.ICacheHash;
@@ -28,9 +30,11 @@ public final class AccountService implements IAccountService {
 	
 	private static final String FIELD_KEY = "key";
 	
-	private static final String FIELD_PASSWORD = "password";
+	private static final String FIELD_OPEN_ID = "openId";
 	
 	private static final String FIELD_ID = "id";
+	
+	private static final Logger log = LoggerFactory.getLogger(AccountService.class);
 	
 	private final IEntityManager entityManager;
 	
@@ -60,11 +64,10 @@ public final class AccountService implements IAccountService {
 	private String cacheAccount(Account account) {
 		String key = generateKey();
 		ICacheHash<String, String, String> hash = cache.hash();
-		String name = account.getName();
-		hash.set(name, FIELD_KEY, key);
-		hash.set(name, FIELD_PASSWORD, account.getPassword());
-		hash.set(name, FIELD_ID, String.valueOf(account.getId()));
-		cache.key().expire(name, expire, TimeUnit.MILLISECONDS);
+		hash.set(key, FIELD_KEY, key);
+		hash.set(key, FIELD_OPEN_ID, account.getOpenId());
+		hash.set(key, FIELD_ID, String.valueOf(account.getId()));
+		cache.key().expire(key, expire, TimeUnit.MILLISECONDS);
 		return key;
 	}
 
@@ -78,8 +81,11 @@ public final class AccountService implements IAccountService {
 		if (appId != null && appId.length() > 0 && appKey != null && appKey.length() > 0) {
 			String openId = appService.authorize(appId, appKey, account.getId());
 			account.setOpenId(openId);
+		} else {
+			account.setOpenId("");
 		}
 		account.setLoginKey(cacheAccount(account));
+		log.info("signUp {}, open id {}.", account.getName(), account.getOpenId());
 		return account;
 	}
 
@@ -96,10 +102,11 @@ public final class AccountService implements IAccountService {
 
 	@Override
 	public boolean authenticate(Account account) {
-		String name = account.getName();
-		boolean ret = account.getLoginKey().equals(cache.hash().get(name, FIELD_KEY));
+		String key = account.getLoginKey();
+		boolean ret = account.getOpenId().equals(cache.hash().get(key, FIELD_OPEN_ID));
 		if (ret) {
-			cache.key().delete(name);
+			log.info("authenticate {}.", key);
+			cache.key().delete(key);
 		}
 		return ret;
 	}
