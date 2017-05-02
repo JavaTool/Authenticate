@@ -10,6 +10,7 @@ import org.authenticate.account.IAccountService;
 import org.authenticate.app.AppService;
 import org.authenticate.app.IAppService;
 import org.tool.server.cache.ICache;
+import org.tool.server.cache.redis.IJedisReources;
 import org.tool.server.cache.redis.JedisPoolResources;
 import org.tool.server.cache.redis.string.RedisStringPoolCache;
 import org.tool.server.io.IConfigurationHolder;
@@ -32,7 +33,9 @@ public class Startup extends AbstractStartup {
 		entityManager = new EntityManagerImpl(hc);
 		// redis
 		String address = configuration.getConfigurationValue(Configuration.REDIS_ADDRESS);
-		ICache<String, String, String> cache = new RedisStringPoolCache(new JedisPoolResources(address, 10, 10, 1000, ""));
+		IJedisReources jedisReources = new JedisPoolResources(address, 10, 10, 1000, "");
+		jedisReources.exec(jedis -> jedis.ping());
+		ICache<String, String, String> cache = new RedisStringPoolCache(jedisReources);
 		// service
 		int expire = Integer.parseInt(configuration.getConfigurationValue(Configuration.EXPIRE));
 		AccountService accountService = new AccountService(entityManager, cache, expire);
