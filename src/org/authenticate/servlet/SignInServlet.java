@@ -17,7 +17,7 @@ public final class SignInServlet extends BaseServlet {
 	private static final String NAME = IAccountService.class.getName();
 
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		work(req, resp, (q, p, j) -> {
 			Account account = readJson(q, Account.class);
 			String key = ((IAccountService) q.getServletContext().getAttribute(NAME)).signIn(account);
